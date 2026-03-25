@@ -1,0 +1,193 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "987494348",
+        "text": "=Günaydın! \nBalıkesir'de hava şu an {{ $('HTTP Request').item.json.main.temp }} derece ve bugunkü durum: {{ $('HTTP Request').item.json.weather[0].description }}\n\nGecenin özeti:\n{{ $json.content.parts[0].text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "dc401eb9-a0a1-42f1-bef7-9f1ad287e488",
+      "name": "Send a text message",
+      "webhookId": "8e3b7110-4345-47d3-ac04-697da60fadb0",
+      "credentials": {
+        "telegramApi": {
+          "id": "D22BwKLkjYikfnWE",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "30a06fdf-9dc9-44ac-91c3-702043200025",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather?q=Balikesir,TR&appid=9e4274419cd5c57fdd3b19e8089f9f65&units=metric&lang=tr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "dadd5360-9286-4b89-9e8a-e35e9b71e173",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://www.ntv.com.tr/son-dakika.rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "786c2db4-a7d3-4315-8ba6-68100398ba22",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "90d07bc5-a275-4cbb-b42c-5752b3b64e8b",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Sen kıdemli ve çok ciddi bir haber editörüsün. Sana Türkiye'deki bir haber sitesinden alınan \"clickbait\" (tık tuzağı) bir başlık ve özet vereceğim.\nSenden tek istediğim şey: Bu haberi okuyup, olayın ne olduğunu (Örn: Mersin'de 4.5 büyüklüğünde deprem oldu) tek bir net, objektif ve kısa cümleyle özetlemen. Yorum yapma, sadece olayı söyle.\n\nİşte Haber Başlığı: {{ $json.title }}\nHaberin Detayı: {{ $json.contentSnippet }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "ff5f5d90-c232-4e5d-acbb-0ac1844588da",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZRPqlCnYrVbwLddA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f6186137-d6c7-4780-b334-00b4aa854367",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eb0424f69f9d76dc764f214ee2851ec980a52a81c8627500bda98cb6dc90717b"
+  },
+  "id": "G0b9dd4J59zRIGez",
+  "tags": []
+}
